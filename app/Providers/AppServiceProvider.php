@@ -25,20 +25,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrap();
 
-        Blade::if('open', function () {
-            $isOpen = false;
-
-            $opened = OpenRegistration::where('kode_status', 'open-registration')->first();
-
-            // // check if the registration is opened
-                if ($opened->value == "off") {
-                    return false;
-                } 
-    
-                return true;   
-
-        });
-
         config(['app.locale' => 'id']);
         Carbon::setLocale('id');
         date_default_timezone_set('Asia/Jakarta');

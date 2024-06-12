@@ -19,6 +19,8 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\OpenRegistrationTask::class,
         Commands\OnsiteRegistrationTask::class,
+        Commands\ConsumeKafkaEvents::class,
+        Commands\KafkaConsumer::class,
     ];
     /**
      * Define the application's command schedule.
