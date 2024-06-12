@@ -21,6 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::apiResource('/payment', PaymentController::class);
-Route::get('/payment/showInquiry?{id}', [InquiryController::class, 'show']);
-Route::post('/payment/updateInquiry?{id}', [InquiryController::class, 'update']);
+Route::apiResource('/payment', PaymentController::class)->except(['show']);
+Route::get('/payment/showInquiry', [InquiryController::class, 'show']);
+Route::post('/payment/updateInquiry', [InquiryController::class, 'update']);

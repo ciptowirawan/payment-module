@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Payment;
 use Illuminate\Http\Request;
+use Junges\Kafka\Facades\Kafka;
 use Junges\Kafka\Message\Message;
 use Enqueue\SimpleClient\SimpleClient;
+use App\Http\Resources\PaymentResource;
 
 class InquiryController extends Controller
 {
@@ -15,7 +18,8 @@ class InquiryController extends Controller
         $this->client = new SimpleClient(config('enqueue.default'));
     }
 
-    public function show(string $virtualAccount) {
+    public function show(Request $request) {
+        $virtualAccount = $request->query('id');
         $inquiry = Payment::where('payment_account', $virtualAccount)->first();
 
         if (!$inquiry) {
@@ -25,10 +29,11 @@ class InquiryController extends Controller
         return new PaymentResource(true, 'Tagihan ditemukan!', $inquiry);
     }
 
-    public function update(string $virtualAccount, string $status) {
+    public function update(Request $request) {
+        $virtualAccount = $request->query('id');
         $updatePayment = Payment::where('payment_account', $virtualAccount)
             ->update([
-                'status' => $status
+                'status' => $request->query('status')
             ]);
 
         $updatedPaymentData = Payment::where('payment_account', $virtualAccount)->first();
@@ -39,8 +44,14 @@ class InquiryController extends Controller
             key: 'payment-success'  
         );
         
-        Kafka::publishOn('payment-success')->withMessage($message);
+        try {
+            $producer = Kafka::publishOn('payment-success', '192.168.99.100:29092')->withMessage($message);
+
+            $producer->send();
+        } catch (Exception $e) {
+            dd('Caught exception: ',  $e->getMessage(), "\n");
+        }
     
-        return response()->json(['message' => 'Payment Updated successfully']);
+        return new PaymentResource(true, 'Pembayaran Berhasil dikonfirmasi!', $updatedPaymentData);
     }
 }
