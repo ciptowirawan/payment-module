@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Listeners\SyncMemberData;
+use App\Events\MemberDataReceived;
 use App\Listeners\SyncRegistrantData;
 use Illuminate\Support\Facades\Event;
 use App\Events\RegistrantDataReceived;
@@ -25,6 +27,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         RegistrantDataReceived::class => [
             SyncRegistrantData::class,
+        ],
+        MemberDataReceived::class => [
+            SyncMemberData::class,
         ],
     ];
 

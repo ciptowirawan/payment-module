@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payments', function (Blueprint $table) {
-            $table->id();
+        Schema::create('billings', function (Blueprint $table) {
+            $table->id();            
             $table->decimal('amount', $precision = 12, $scale = 2);
-            $table->string('status')->default('unpaid');
             $table->string('payment_account')->nullable();
-            $table->datetime('payment_date')->nullable();
-            $table->decimal('paid_amount', $precision = 12, $scale = 2)->nullable();
+            $table->string('status')->default('unpaid');
+            $table->string('billing_name')->nullable();
+            $table->foreignId('billing_user_id');
             $table->foreignId('order_id');
             $table->timestamps();
         });
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payments');
+        Schema::dropIfExists('billings');
     }
 };

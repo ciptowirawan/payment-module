@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use App\Models\Billing;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use App\Models\PaymentMember;
 use Junges\Kafka\Facades\Kafka;
 use Junges\Kafka\Message\Message;
 use Enqueue\SimpleClient\SimpleClient;
@@ -20,7 +23,7 @@ class InquiryController extends Controller
 
     public function show(Request $request) {
         $virtualAccount = $request->query('id');
-        $inquiry = Payment::where('payment_account', $virtualAccount)->first();
+        $inquiry = Billing::where('payment_account', $virtualAccount)->where('status', 'unpaid')->first();
 
         if (!$inquiry) {
             return response()->json('Tagihan tidak ditemukan!', 422);
@@ -31,12 +34,27 @@ class InquiryController extends Controller
 
     public function update(Request $request) {
         $virtualAccount = $request->query('id');
-        $updatePayment = Payment::where('payment_account', $virtualAccount)
-            ->update([
-                'status' => $request->query('status')
+        $inquiry = Billing::where('payment_account', $virtualAccount)->where('status', 'unpaid')->first();
+        if (!$inquiry) {
+            return response()->json('Tagihan tidak ditemukan!', 422);
+        }
+
+        $inquiry->update([
+            "status" => "paid"
+        ]);
+
+        $updatePayment = Payment::create([
+                'amount' => $inquiry->amount,
+                'status' => $request->query('status'),
+                'payment_account' => $virtualAccount,
+                'payment_date' => Carbon::now(),
+                'paid_amount' => $request->query('amount'),
+                'order_id' => $inquiry->order_id
             ]);
 
-        $updatedPaymentData = Payment::where('payment_account', $virtualAccount)->first();
+        // $updatedPaymentData = Payment::where('payment_account', $virtualAccount)->first();
+        $updatedPaymentData = $updatePayment->toArray();
+        $updatedPaymentData['user_id'] = $inquiry->billing_user_id;
 
         $message = new Message(
             headers: ['Content-Type' => 'application/json'],
@@ -45,7 +63,7 @@ class InquiryController extends Controller
         );
         
         try {
-            $producer = Kafka::publishOn('payment-success', '192.168.99.100:29092')->withMessage($message);
+            $producer = Kafka::publishOn('payment-success')->withMessage($message);
 
             $producer->send();
         } catch (Exception $e) {
