@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use RdKafka\Consumer;
 use App\Models\Billing;
 use App\Models\Payment;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class InquiryController extends Controller
     // }
 
     public function show(Request $request) {
+
         $virtualAccount = $request->query('id');
         // $inquiry = Billing::where('payment_account', $virtualAccount)->where('status', 'unpaid')->first();
         $inquiry = Billing::where('payment_account', $virtualAccount)
